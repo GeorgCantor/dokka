@@ -19,7 +19,9 @@
             <toc-element id="dokka-markdown.md"/>
             <toc-element id="dokka-javadoc.md"/>
         </toc-element>
-        <toc-element id="dokka-plugins.md"/>
+        <toc-element id="dokka-plugins.md">
+             <toc-element id="dokkatoo-migration.md" hidden="true"/>
+        </toc-element>
         <toc-element toc-title="Module documentation" id="dokka-module-and-package-docs.md"/>
     </chunk>
 </product-profile>
