@@ -6,7 +6,6 @@ package org.jetbrains.dokka.gradle
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.string.shouldContainOnlyOnce
 import io.kotest.matchers.string.shouldNotContain
-import org.gradle.testkit.runner.BuildResult
 import org.jetbrains.dokka.gradle.internal.DokkaConstants
 import org.jetbrains.dokka.gradle.utils.*
 
@@ -15,50 +14,90 @@ class MigrationMessagesTest : FunSpec({
 
         val project = migrationMessagesTestProject()
 
-        context("when no plugin flags are set") {
-            project.runner
-                .addArguments(
-                    ":help",
-                    "--dry-run",
-                    "--warn",
-                )
-                .addArguments()
-                .build {
-                    test("output should contain V1 warning") {
-                        shouldOnlyContainV1Warning()
-                    }
+        listOf(
+            null,
+            "$V2_PLUGIN_ENABLED_FLAG=false"
+        ).forEach { dgpFlag ->
+            context("when ${dgpFlag ?: "no"} DGP flag is set") {
+                context("and log level is set to 'warn'") {
+                    project.runner
+                        .addArguments(
+                            ":help",
+                            "--dry-run",
+                            "--warn",
+                        )
+                        .apply {
+                            if (dgpFlag != null) {
+                                addArguments("-P${dgpFlag}")
+                            }
+                        }
+                        .build {
+                            test("output should contain V1 warning") {
+                                output shouldContainOnlyOnce expectedV1Warning
+                            }
+                            test("output should not contain V1 message") {
+                                output shouldNotContain expectedV1Message
+                            }
+                        }
                 }
-        }
-
-        context("when v2 is disabled") {
-            project.runner
-                .addArguments(
-                    ":help",
-                    "--dry-run",
-                    "--warn",
-                    "-P$V2_PLUGIN_ENABLED_FLAG=false",
-                )
-                .addArguments()
-                .build {
-                    test("output should contain V1 warning") {
-                        shouldOnlyContainV1Warning()
-                    }
+                context("and log level is set to 'lifecycle'") {
+                    project.runner
+                        .addArguments(
+                            ":help",
+                            "--dry-run",
+                        )
+                        .apply {
+                            if (dgpFlag != null) {
+                                addArguments("-P${dgpFlag}")
+                            }
+                        }
+                        .build {
+                            test("output should contain V1 warning") {
+                                output shouldContainOnlyOnce expectedV1Warning
+                            }
+                            test("output should contain V1 message") {
+                                output shouldContainOnlyOnce expectedV1Message
+                            }
+                        }
                 }
+            }
         }
 
         context("when v2 is enabled") {
 
-            project.runner
-                .addArguments(
-                    ":help",
-                    "--dry-run",
-                    "-P$V2_PLUGIN_ENABLED_FLAG=true",
-                )
-                .build {
-                    test("output should only contain V2 message") {
-                        shouldOnlyContainV2Message()
+            context("and log level is set to 'warn'") {
+                project.runner
+                    .addArguments(
+                        ":help",
+                        "--dry-run",
+                        "--warn",
+                        "-P$V2_PLUGIN_ENABLED_FLAG=true",
+                    )
+                    .build {
+                        test("output should contain V2 warning") {
+                            output shouldContainOnlyOnce expectedV2Warning
+                        }
+                        test("output should not contain V2 message") {
+                            output shouldNotContain expectedV2Message
+                        }
                     }
-                }
+            }
+            context("and log level is set to 'lifecycle'") {
+                project.runner
+                    .addArguments(
+                        ":help",
+                        "--dry-run",
+                        "-P$V2_PLUGIN_ENABLED_FLAG=true",
+                    )
+                    .build {
+                        test("output should contain V2 warning") {
+                            output shouldContainOnlyOnce expectedV2Warning
+                        }
+                        test("output should contain V2 message") {
+                            output shouldContainOnlyOnce expectedV2Message
+                        }
+                    }
+            }
 
             listOf(
                 V2_PLUGIN_NO_WARN_FLAG,
@@ -102,48 +141,42 @@ class MigrationMessagesTest : FunSpec({
         private const val V2_PLUGIN_NO_WARN_FLAG_PRETTY =
             "${V2_PLUGIN_ENABLED_FLAG}.noWarn"
 
-        fun BuildResult.shouldOnlyContainV1Warning() {
-            output shouldContainOnlyOnce /* language=text */ """
-                |┌──────────────────────────────────────────────────────────────────────────────────────┐
-                |│ ⚠ Warning: Dokka Gradle Plugin V1 mode is enabled                                    │
-                |│                                                                                      │
-                |│   V1 mode is deprecated, and will be removed in Dokka version 2.1.0                  │
-                |│                                                                                      │
-                |│   Please migrate Dokka Gradle Plugin to V2. This will require updating your project. │
-                |│   To get started check out the Dokka Gradle Plugin Migration guide                   │
-                |│       https://kotl.in/dokka-gradle-migration                                         │
-                |│                                                                                      │
-                |│   Once you have prepared your project, enable V2 by adding                           │
-                |│       org.jetbrains.dokka.experimental.gradlePlugin.enableV2=true                    │
-                |│   to your project's `gradle.properties`                                              │
-                |│                                                                                      │
-                |│   Please report any feedback or problems to Dokka GitHub Issues                      │
-                |│       https://github.com/Kotlin/dokka/issues/                                        │
-                |└──────────────────────────────────────────────────────────────────────────────────────┘
-                """.trimMargin()
-            output shouldNotContain "Dokka Gradle Plugin V2"
-        }
+        private val expectedV1Warning = /* language=text */ """
+            |warning: Dokka Gradle Plugin V1 mode is deprecated
+            """.trimMargin()
 
-        fun BuildResult.shouldOnlyContainV2Message() {
-            output shouldContainOnlyOnce /* language=text */ """
-                |┌──────────────────────────────────────────────────────────────────────────┐
-                |│ Dokka Gradle Plugin V2 is enabled ♡                                      │
-                |│                                                                          │
-                |│   We would appreciate your feedback!                                     │
-                |│   Please report any feedback or problems to Dokka GitHub Issues          │
-                |│       https://github.com/Kotlin/dokka/issues/                            │
-                |│                                                                          │
-                |│   If you need help or advice, check out the migration guide              │
-                |│       https://kotl.in/dokka-gradle-migration                             │
-                |│                                                                          │
-                |│   You can suppress this message by adding                                │
-                |│       org.jetbrains.dokka.experimental.gradlePlugin.enableV2.nowarn=true │
-                |│   to your project's `gradle.properties`                                  │
-                |└──────────────────────────────────────────────────────────────────────────┘
-                """.trimMargin()
-            output shouldNotContain "Dokka Gradle Plugin V1"
-        }
+        private val expectedV1Message = /* language=text */ """
+            |Dokka Gradle Plugin V1 mode is deprecated, and will be removed in Dokka version 2.1.0
+            |
+            |Please migrate Dokka Gradle Plugin to V2. This will require updating your project.
+            |To get started check out the Dokka Gradle Plugin Migration guide
+            |    https://kotl.in/dokka-gradle-migration
+            |
+            |Once you have prepared your project, enable V2 by adding
+            |    ${V2_PLUGIN_ENABLED_FLAG}=true
+            |to your project's `gradle.properties`
+            |
+            |Please report any feedback or problems to Dokka GitHub Issues
+            |    https://github.com/Kotlin/dokka/issues/
+            """.trimMargin().prependIndent(" > ")
 
+        private val expectedV2Warning = /* language=text */ """
+            |warning: Dokka Gradle Plugin V2 is enabled
+            """.trimMargin()
+
+        private val expectedV2Message = /* language=text */ """
+            |We would appreciate your feedback on Dokka Gradle Plugin V2!
+            |
+            |Please report any feedback or problems to Dokka GitHub Issues
+            |    https://github.com/Kotlin/dokka/issues/
+            |
+            |If you need help or advice, check out the migration guide
+            |    https://kotl.in/dokka-gradle-migration
+            |
+            |You can suppress this message by adding
+            |    $V2_PLUGIN_NO_WARN_FLAG=true
+            |to your project's `gradle.properties`
+            """.trimMargin().prependIndent(" > ")
     }
 }
 

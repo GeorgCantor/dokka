@@ -78,44 +78,43 @@ internal abstract class PluginFeaturesService : BuildService<PluginFeaturesServi
 
     private fun logV1PluginMessage() {
         if (primaryService) {
-            logger.warn(
+            logger.warn("warning: Dokka Gradle Plugin V1 mode is deprecated")
+            logger.lifecycle(
                 """
-                |⚠ Warning: Dokka Gradle Plugin V1 mode is enabled
+                |Dokka Gradle Plugin V1 mode is deprecated, and will be removed in Dokka version 2.1.0
                 |
-                |  V1 mode is deprecated, and will be removed in Dokka version 2.1.0
+                |Please migrate Dokka Gradle Plugin to V2. This will require updating your project.
+                |To get started check out the Dokka Gradle Plugin Migration guide
+                |    https://kotl.in/dokka-gradle-migration
                 |
-                |  Please migrate Dokka Gradle Plugin to V2. This will require updating your project.
-                |  To get started check out the Dokka Gradle Plugin Migration guide
-                |      https://kotl.in/dokka-gradle-migration
+                |Once you have prepared your project, enable V2 by adding
+                |    $V2_PLUGIN_ENABLED_FLAG=true
+                |to your project's `gradle.properties`
                 |
-                |  Once you have prepared your project, enable V2 by adding
-                |      $V2_PLUGIN_ENABLED_FLAG=true
-                |  to your project's `gradle.properties`
-                |
-                |  Please report any feedback or problems to Dokka GitHub Issues
-                |      https://github.com/Kotlin/dokka/issues/
-                """.trimMargin().surroundWithBorder()
+                |Please report any feedback or problems to Dokka GitHub Issues
+                |    https://github.com/Kotlin/dokka/issues/
+                """.trimMargin().prependIndent(" > ")
             )
         }
     }
 
     private fun logV2PluginMessage() {
         if (primaryService && !v2PluginNoWarn) {
+            logger.warn("warning: Dokka Gradle Plugin V2 is enabled")
             logger.lifecycle(
                 """
-                |Dokka Gradle Plugin V2 is enabled ♡
+                |We would appreciate your feedback on Dokka Gradle Plugin V2!
                 |
-                |  We would appreciate your feedback!
-                |  Please report any feedback or problems to Dokka GitHub Issues
-                |      https://github.com/Kotlin/dokka/issues/
+                |Please report any feedback or problems to Dokka GitHub Issues
+                |    https://github.com/Kotlin/dokka/issues/
                 |
-                |  If you need help or advice, check out the migration guide
-                |      https://kotl.in/dokka-gradle-migration
+                |If you need help or advice, check out the migration guide
+                |    https://kotl.in/dokka-gradle-migration
                 |
-                |  You can suppress this message by adding
-                |      $V2_PLUGIN_NO_WARN_FLAG=true
-                |  to your project's `gradle.properties`
-                """.trimMargin().surroundWithBorder()
+                |You can suppress this message by adding
+                |    $V2_PLUGIN_NO_WARN_FLAG=true
+                |to your project's `gradle.properties`
+                """.trimMargin().prependIndent(" > ")
             )
         }
     }
@@ -134,21 +133,20 @@ internal abstract class PluginFeaturesService : BuildService<PluginFeaturesServi
 
     private fun logK2AnalysisMessage() {
         if (primaryService && !parameters.k2AnalysisNoWarn.getOrElse(false)) {
-            logger.warn(
+            logger.warn("warning: Dokka K2 Analysis is enabled")
+            logger.lifecycle(
                 """
-                |Dokka K2 Analysis is enabled
+                |Dokka K2 Analysis is Experimental and is still under active development.
+                |It can cause build failures or generate incorrect documentation. 
                 |
-                |  This feature is Experimental and is still under active development.
-                |  It can cause build failures or generate incorrect documentation. 
+                |We would appreciate your feedback!
+                |Please report any feedback or problems to Dokka GitHub Issues
+                |    https://github.com/Kotlin/dokka/issues/
                 |
-                |  We would appreciate your feedback!
-                |  Please report any feedback or problems to Dokka GitHub Issues
-                |      https://github.com/Kotlin/dokka/issues/
-                |
-                |  You can suppress this message by adding
-                |      $K2_ANALYSIS_NO_WARN_FLAG_PRETTY=true
-                |  to your project's `gradle.properties`
-                """.trimMargin().surroundWithBorder()
+                |You can suppress this message by adding
+                |    $K2_ANALYSIS_NO_WARN_FLAG=true
+                |to your project's `gradle.properties`
+                """.trimMargin().prependIndent(" > ")
             )
         }
     }
@@ -243,24 +241,5 @@ internal abstract class PluginFeaturesService : BuildService<PluginFeaturesServi
                         .forUseAtConfigurationTimeCompat()
                 )
                 .map(String::toBoolean)
-
-        /**
-         * Draw a pretty ascii border around some text.
-         * This helps with logging a multiline message, so it is easier to view.
-         */
-        private fun String.surroundWithBorder(): String {
-            val lines = lineSequence().map { it.trimEnd() }
-            val maxLength = lines.maxOf { it.length }
-            val horizontalBorder = "─".repeat(maxLength)
-
-            return buildString {
-                appendLine("┌─$horizontalBorder─┐")
-                lines.forEach { line ->
-                    val paddedLine = line.padEnd(maxLength, padChar = ' ')
-                    appendLine("│ $paddedLine │")
-                }
-                appendLine("└─$horizontalBorder─┘")
-            }
-        }
     }
 }
