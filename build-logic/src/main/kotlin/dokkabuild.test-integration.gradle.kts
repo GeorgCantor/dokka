@@ -22,8 +22,6 @@ val integrationTest by tasks.registering {
 }
 
 tasks.withType<Test>().configureEach {
-    setForkEvery(1)
-    maxHeapSize = "2G"
     dokkaBuild.integrationTestParallelism.orNull?.let { parallelism ->
         maxParallelForks = parallelism
     }

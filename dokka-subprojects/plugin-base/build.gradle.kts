@@ -79,10 +79,6 @@ sourceSets.main {
     resources.srcDir(prepareDokkaHtmlFrontendFiles.map { it.destinationDir })
 }
 
-tasks.test {
-    maxHeapSize = "4G"
-}
-
 //region Download and unpack kotlin-stdlib, so EnumTemplatesTest can test synthetic enum functions.
 val kotlinStdlibSourcesDir = downloadKotlinStdlibJvmSources(project)
 tasks.withType<Test>().configureEach {
