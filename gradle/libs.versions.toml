@@ -53,6 +53,7 @@ gradlePlugin-gradlePluginPublish = "1.2.1"
 gradlePlugin-gradleNode = "7.0.1"
 
 ## Gradle Develocity
+# versions should be kept in sync with build-settings-logic/settings.gradle.kts
 gradlePlugin-gradle-customUserData = "2.0.2"
 gradlePlugin-gradle-develocity = "3.17.6"
 
