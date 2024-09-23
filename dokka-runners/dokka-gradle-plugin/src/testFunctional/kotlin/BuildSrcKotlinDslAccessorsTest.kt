@@ -7,6 +7,7 @@ import io.kotest.core.spec.style.FunSpec
 import org.gradle.testkit.runner.TaskOutcome.*
 import org.jetbrains.dokka.gradle.internal.DokkaConstants
 import org.jetbrains.dokka.gradle.utils.*
+import org.jetbrains.dokka.gradle.utils.GradleProjectTest.Companion.settingsRepositories
 
 class BuildSrcKotlinDslAccessorsTest : FunSpec({
 
